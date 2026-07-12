@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: springlens-server
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/springlens
+    username: postgres
+    password: shreeja
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+    show-sql: true
+
+    open-in-view: false
+
+    properties:
+      hibernate:
+        ddl-auto: update
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
