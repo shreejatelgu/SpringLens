@@ -1,0 +1,22 @@
+# Node
+client/node_modules/
+client/dist/
+
+# Java
+server/target/
+server/.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.vscode/
+.idea/
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db

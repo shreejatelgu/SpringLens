@@ -1,0 +1,33 @@
+# Auto detect text files and normalize line endings
+* text=auto
+
+# Java
+*.java text
+*.kt text
+
+# XML / Maven
+*.xml text
+*.properties text
+*.yaml text
+*.yml text
+
+# JavaScript / TypeScript
+*.js text
+*.jsx text
+*.ts text
+*.tsx text
+
+# CSS / HTML
+*.css text
+*.scss text
+*.html text
+
+# Markdown
+*.md text
+
+# Shell
+*.sh text eol=lf
+
+# Windows scripts
+*.bat text eol=crlf
+*.cmd text eol=crlf
