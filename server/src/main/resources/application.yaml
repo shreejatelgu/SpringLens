@@ -19,6 +19,13 @@ spring:
       hibernate:
         ddl-auto: update
 
+        springdoc:
+            swagger-ui:
+              path: /swagger-ui
+
+            api-docs:
+              path: /api-docs
+
 server:
   port: 8080
 
