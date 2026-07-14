@@ -22,7 +22,7 @@ public class SwaggerConfig {
                                 .contact(
                                         new Contact()
                                                 .name("Shreeja Telgu")
-                                                .email("shhreejatelgu57@gmail.com")
+                                                .email("shreejatelgu57@gmail.com")
                                                 .url("https://github.com/shreejatelgu/SpringLens")
                                 )
                                 .license(
