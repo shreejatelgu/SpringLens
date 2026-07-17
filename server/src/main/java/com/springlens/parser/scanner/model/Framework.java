@@ -7,6 +7,7 @@ public enum Framework {
 
     SPRING_BOOT,
     SPRING,
+    JAVA,
     UNKNOWN
 
 }

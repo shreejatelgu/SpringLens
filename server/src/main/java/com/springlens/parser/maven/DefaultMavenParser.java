@@ -1,9 +1,12 @@
 package com.springlens.parser.maven;
 
+import com.springlens.parser.maven.extractor.JavaVersionExtractor;
 import com.springlens.parser.maven.model.MavenProjectInfo;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
@@ -16,6 +19,12 @@ import java.nio.file.Path;
 @Component
 public class DefaultMavenParser implements MavenParser {
 
+    private final JavaVersionExtractor javaVersionExtractor;
+
+    public DefaultMavenParser(JavaVersionExtractor javaVersionExtractor) {
+        this.javaVersionExtractor = javaVersionExtractor;
+    }
+
     @Override
     public MavenProjectInfo parse(Path projectRoot) {
 
@@ -25,7 +34,7 @@ public class DefaultMavenParser implements MavenParser {
 
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
-            // Security against XXE attacks
+            // Prevent XXE attacks
             factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
             factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
             factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
@@ -36,13 +45,21 @@ public class DefaultMavenParser implements MavenParser {
 
             document.getDocumentElement().normalize();
 
-            Element root = document.getDocumentElement();
+            Element project = document.getDocumentElement();
+
+            Element parent = getDirectChild(project, "parent");
 
             return MavenProjectInfo.builder()
-                    .groupId(text(root, "groupId"))
-                    .artifactId(text(root, "artifactId"))
-                    .version(text(root, "version"))
-                    .packaging(text(root, "packaging"))
+                    .groupId(getDirectChildText(project, "groupId"))
+                    .artifactId(getDirectChildText(project, "artifactId"))
+                    .version(getDirectChildText(project, "version"))
+                    .packaging(getDirectChildText(project, "packaging"))
+
+                    .parentGroupId(getDirectChildText(parent, "groupId"))
+                    .parentArtifactId(getDirectChildText(parent, "artifactId"))
+                    .parentVersion(getDirectChildText(parent, "version"))
+
+                    .javaVersion(javaVersionExtractor.extract(document))
                     .build();
 
         } catch (Exception ex) {
@@ -54,17 +71,44 @@ public class DefaultMavenParser implements MavenParser {
         }
     }
 
-    private String text(Element root, String tag) {
+    /**
+     * Returns the first direct child element having the given tag name.
+     */
+    private Element getDirectChild(Element parent, String tagName) {
 
-        if (root.getElementsByTagName(tag).getLength() == 0) {
+        if (parent == null) {
             return null;
         }
 
-        return root
-                .getElementsByTagName(tag)
-                .item(0)
-                .getTextContent()
-                .trim();
+        NodeList children = parent.getChildNodes();
+
+        for (int i = 0; i < children.getLength(); i++) {
+
+            Node node = children.item(i);
+
+            if (node.getNodeType() == Node.ELEMENT_NODE
+                    && tagName.equals(node.getNodeName())) {
+
+                return (Element) node;
+            }
+        }
+
+        return null;
     }
 
+    /**
+     * Returns the text content of a direct child element.
+     */
+    private String getDirectChildText(Element parent, String tagName) {
+
+        Element child = getDirectChild(parent, tagName);
+
+        if (child == null) {
+            return null;
+        }
+
+        String value = child.getTextContent();
+
+        return value == null ? null : value.trim();
+    }
 }

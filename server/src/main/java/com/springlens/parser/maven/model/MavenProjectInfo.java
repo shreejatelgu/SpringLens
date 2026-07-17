@@ -26,14 +26,18 @@ public class MavenProjectInfo {
      */
     private String artifactId;
 
-    /**
-     * Project version.
-     */
-    private String version;
+    private String parentGroupId;
 
+     private String version;
+
+    private String parentArtifactId;
+
+    private String parentVersion;
     /**
      * Packaging type (jar, war, etc.).
      */
     private String packaging;
+
+    private String javaVersion;
 
 }
