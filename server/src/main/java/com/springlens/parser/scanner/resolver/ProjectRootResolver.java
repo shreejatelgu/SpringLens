@@ -28,10 +28,10 @@ public class ProjectRootResolver {
             Optional<Path> buildFile = stream
                     .filter(Files::isRegularFile)
                     .filter(this::isBuildFile)
-                    .min(Comparator.comparingInt(Path::getNameCount));
+                    .min(Comparator.comparingInt(path -> path.getNameCount()));
 
-            return buildFile
-                    .map(Path::getParent)
+                return buildFile
+                    .flatMap(path -> Optional.ofNullable(path.getParent()))
                     .orElse(extractedDirectory);
 
         } catch (IOException ex) {
