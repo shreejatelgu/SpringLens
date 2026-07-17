@@ -1,28 +1,54 @@
 package com.springlens.parser.maven;
 
-import com.springlens.parser.maven.extractor.JavaVersionExtractor;
+import com.springlens.parser.maven.extractor.DependencyExtractor;
+import com.springlens.parser.maven.extractor.ParentExtractor;
+import com.springlens.parser.maven.extractor.PluginExtractor;
+import com.springlens.parser.maven.extractor.PropertyExtractor;
+import com.springlens.parser.maven.model.MavenDependency;
+import com.springlens.parser.maven.model.MavenPlugin;
 import com.springlens.parser.maven.model.MavenProjectInfo;
+import com.springlens.parser.maven.model.MavenProperty;
+import com.springlens.parser.maven.model.ParentInfo;
+import com.springlens.parser.maven.resolver.JavaVersionResolver;
+import com.springlens.parser.maven.resolver.SpringBootVersionResolver;
+import com.springlens.parser.maven.extractor.ProjectInfoExtractor;
+import com.springlens.parser.maven.model.ProjectInfo;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.nio.file.Path;
+import java.util.List;
 
-/**
- * Default implementation of MavenParser.
- */
 @Component
 public class DefaultMavenParser implements MavenParser {
 
-    private final JavaVersionExtractor javaVersionExtractor;
+    private final ParentExtractor parentExtractor;
+    private final PropertyExtractor propertyExtractor;
+    private final DependencyExtractor dependencyExtractor;
+    private final PluginExtractor pluginExtractor;
+    private final JavaVersionResolver javaVersionResolver;
+    private final SpringBootVersionResolver springBootVersionResolver;
+    private final ProjectInfoExtractor projectInfoExtractor;
 
-    public DefaultMavenParser(JavaVersionExtractor javaVersionExtractor) {
-        this.javaVersionExtractor = javaVersionExtractor;
+    public DefaultMavenParser(
+            ParentExtractor parentExtractor,
+            PropertyExtractor propertyExtractor,
+            DependencyExtractor dependencyExtractor,
+            PluginExtractor pluginExtractor,
+            JavaVersionResolver javaVersionResolver,
+            SpringBootVersionResolver springBootVersionResolver,
+            ProjectInfoExtractor projectInfoExtractor
+    ) {
+        this.parentExtractor = parentExtractor;
+        this.propertyExtractor = propertyExtractor;
+        this.dependencyExtractor = dependencyExtractor;
+        this.pluginExtractor = pluginExtractor;
+        this.javaVersionResolver = javaVersionResolver;
+        this.springBootVersionResolver = springBootVersionResolver;
+        this.projectInfoExtractor = projectInfoExtractor;
     }
 
     @Override
@@ -34,7 +60,6 @@ public class DefaultMavenParser implements MavenParser {
 
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
-            // Prevent XXE attacks
             factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
             factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
             factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
@@ -45,23 +70,52 @@ public class DefaultMavenParser implements MavenParser {
 
             document.getDocumentElement().normalize();
 
-            Element project = document.getDocumentElement();
+            ProjectInfo projectInfo =
+                projectInfoExtractor.extract(document);
 
-            Element parent = getDirectChild(project, "parent");
+            ParentInfo parent =
+                parentExtractor.extract(document);
 
+            List<MavenProperty> properties =
+                propertyExtractor.extract(document);
+
+            List<MavenDependency> dependencies =
+                dependencyExtractor.extract(document);
+
+            List<MavenPlugin> plugins =
+                pluginExtractor.extract(document);
             return MavenProjectInfo.builder()
-                    .groupId(getDirectChildText(project, "groupId"))
-                    .artifactId(getDirectChildText(project, "artifactId"))
-                    .version(getDirectChildText(project, "version"))
-                    .packaging(getDirectChildText(project, "packaging"))
 
-                    .parentGroupId(getDirectChildText(parent, "groupId"))
-                    .parentArtifactId(getDirectChildText(parent, "artifactId"))
-                    .parentVersion(getDirectChildText(parent, "version"))
+        .groupId(projectInfo.getGroupId())
+        .artifactId(projectInfo.getArtifactId())
+        .version(projectInfo.getVersion())
+        .packaging(projectInfo.getPackaging())
 
-                    .javaVersion(javaVersionExtractor.extract(document))
-                    .build();
+        .parentGroupId(
+                parent != null ? parent.getGroupId() : null
+        )
+        .parentArtifactId(
+                parent != null ? parent.getArtifactId() : null
+        )
+        .parentVersion(
+                parent != null ? parent.getVersion() : null
+        )
 
+        .properties(properties)
+
+        .dependencies(dependencies)
+
+        .plugins(plugins)
+
+        .javaVersion(
+                javaVersionResolver.resolve(properties)
+        )
+
+        .springBootVersion(
+                springBootVersionResolver.resolve(parent)
+        )
+
+        .build();
         } catch (Exception ex) {
 
             throw new IllegalStateException(
@@ -69,46 +123,7 @@ public class DefaultMavenParser implements MavenParser {
                     ex
             );
         }
+
     }
 
-    /**
-     * Returns the first direct child element having the given tag name.
-     */
-    private Element getDirectChild(Element parent, String tagName) {
-
-        if (parent == null) {
-            return null;
-        }
-
-        NodeList children = parent.getChildNodes();
-
-        for (int i = 0; i < children.getLength(); i++) {
-
-            Node node = children.item(i);
-
-            if (node.getNodeType() == Node.ELEMENT_NODE
-                    && tagName.equals(node.getNodeName())) {
-
-                return (Element) node;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Returns the text content of a direct child element.
-     */
-    private String getDirectChildText(Element parent, String tagName) {
-
-        Element child = getDirectChild(parent, tagName);
-
-        if (child == null) {
-            return null;
-        }
-
-        String value = child.getTextContent();
-
-        return value == null ? null : value.trim();
-    }
 }
