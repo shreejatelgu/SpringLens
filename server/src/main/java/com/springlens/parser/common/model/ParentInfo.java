@@ -1,4 +1,4 @@
-package com.springlens.parser.maven.model;
+package com.springlens.parser.common.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

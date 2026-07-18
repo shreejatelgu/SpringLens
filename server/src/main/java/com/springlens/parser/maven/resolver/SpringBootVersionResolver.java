@@ -1,7 +1,8 @@
 package com.springlens.parser.maven.resolver;
 
-import com.springlens.parser.maven.model.ParentInfo;
 import org.springframework.stereotype.Component;
+
+import com.springlens.parser.common.model.ParentInfo;
 
 @Component
 public class SpringBootVersionResolver {

@@ -1,6 +1,6 @@
 package com.springlens.parser.maven.extractor;
 
-import com.springlens.parser.maven.model.ParentInfo;
+import com.springlens.parser.common.model.ParentInfo;
 import com.springlens.parser.maven.util.XmlUtils;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;

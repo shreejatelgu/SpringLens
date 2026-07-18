@@ -1,5 +1,6 @@
 package com.springlens.parser.maven;
 
+import com.springlens.parser.common.model.ParentInfo;
 import com.springlens.parser.maven.extractor.DependencyExtractor;
 import com.springlens.parser.maven.extractor.ParentExtractor;
 import com.springlens.parser.maven.extractor.PluginExtractor;
@@ -8,7 +9,6 @@ import com.springlens.parser.maven.model.MavenDependency;
 import com.springlens.parser.maven.model.MavenPlugin;
 import com.springlens.parser.maven.model.MavenProjectInfo;
 import com.springlens.parser.maven.model.MavenProperty;
-import com.springlens.parser.maven.model.ParentInfo;
 import com.springlens.parser.maven.resolver.JavaVersionResolver;
 import com.springlens.parser.maven.resolver.SpringBootVersionResolver;
 import com.springlens.parser.maven.extractor.ProjectInfoExtractor;
